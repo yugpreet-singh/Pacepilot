@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const { mongoConnected } = require("../config/database");
 const router = express.Router();
 
 // Debug middleware to log environment variables
@@ -12,15 +13,16 @@ router.use((req, res, next) => {
   console.log("MONGODB_URI exists:", !!process.env.MONGODB_URI);
   console.log("NODE_ENV:", process.env.NODE_ENV);
   console.log("MongoDB ready state:", mongoose.connection.readyState);
+  console.log("MongoDB connected status:", mongoConnected());
   next();
 });
 
 // Helper function to check MongoDB connection
 const checkMongoConnection = (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
+  if (!mongoConnected() && mongoose.connection.readyState !== 1) {
     console.log("MongoDB not connected, attempting to reconnect...");
     return res.status(503).json({
-      message: "Database connection not ready. Please try again in a moment."
+      message: "Database connection not ready. Please try again in a moment.",
     });
   }
   next();
@@ -130,5 +132,44 @@ router.post(
     }
   }
 );
+
+// Health check endpoint
+router.get("/health", async (req, res) => {
+  try {
+    const mongoStatus = mongoConnected();
+    const mongoReadyState = mongoose.connection.readyState;
+    
+    res.json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      mongoDB: {
+        connected: mongoStatus,
+        readyState: mongoReadyState,
+        readyStateText: getReadyStateText(mongoReadyState)
+      },
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        hasJwtSecret: !!process.env.JWT_SECRET,
+        hasMongoUri: !!process.env.MONGODB_URI
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: error.message
+    });
+  }
+});
+
+// Helper function to get readable ready state
+function getReadyStateText(state) {
+  const states = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting"
+  };
+  return states[state] || "unknown";
+}
 
 module.exports = router;
