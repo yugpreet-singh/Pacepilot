@@ -138,25 +138,25 @@ router.get("/health", async (req, res) => {
   try {
     const mongoStatus = mongoConnected();
     const mongoReadyState = mongoose.connection.readyState;
-    
+
     res.json({
       status: "ok",
       timestamp: new Date().toISOString(),
       mongoDB: {
         connected: mongoStatus,
         readyState: mongoReadyState,
-        readyStateText: getReadyStateText(mongoReadyState)
+        readyStateText: getReadyStateText(mongoReadyState),
       },
       environment: {
         nodeEnv: process.env.NODE_ENV,
         hasJwtSecret: !!process.env.JWT_SECRET,
-        hasMongoUri: !!process.env.MONGODB_URI
-      }
+        hasMongoUri: !!process.env.MONGODB_URI,
+      },
     });
   } catch (error) {
     res.status(500).json({
       status: "error",
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -167,7 +167,7 @@ function getReadyStateText(state) {
     0: "disconnected",
     1: "connected",
     2: "connecting",
-    3: "disconnecting"
+    3: "disconnecting",
   };
   return states[state] || "unknown";
 }

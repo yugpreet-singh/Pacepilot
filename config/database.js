@@ -11,7 +11,7 @@ if (process.env.NODE_ENV !== "production") {
 const connectMongoDB = async (retries = 3) => {
   try {
     console.log("Attempting to connect to MongoDB...");
-    
+
     const options = {
       serverSelectionTimeoutMS: 30000, // 30 seconds
       socketTimeoutMS: 45000, // 45 seconds
@@ -20,7 +20,6 @@ const connectMongoDB = async (retries = 3) => {
       minPoolSize: 0, // Allow 0 connections when idle
       maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
       bufferCommands: false, // Disable buffering for serverless
-      bufferMaxEntries: 0, // Disable buffer for serverless
       // Vercel-specific options
       family: 4, // Force IPv4
       retryWrites: true,
@@ -31,11 +30,14 @@ const connectMongoDB = async (retries = 3) => {
     console.log("MongoDB connected successfully");
     return true;
   } catch (error) {
-    console.error(`MongoDB connection attempt ${4 - retries} failed:`, error.message);
-    
+    console.error(
+      `MongoDB connection attempt ${4 - retries} failed:`,
+      error.message
+    );
+
     if (retries > 1) {
       console.log(`Retrying in 2 seconds... (${retries - 1} attempts left)`);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       return connectMongoDB(retries - 1);
     } else {
       console.error("MongoDB connection failed after all retries");
@@ -46,7 +48,7 @@ const connectMongoDB = async (retries = 3) => {
 
 // Connect to MongoDB with retry
 let mongoConnected = false;
-connectMongoDB().then(success => {
+connectMongoDB().then((success) => {
   mongoConnected = success;
 });
 
@@ -67,7 +69,7 @@ mongoose.connection.on("connected", () => {
 });
 
 // Export connection status for other modules
-module.exports.mongoConnected = () => mongoConnected;
+const getMongoConnected = () => mongoConnected;
 
 // PostgreSQL Connection
 const pgPool = new Pool({
@@ -85,4 +87,4 @@ pgPool.on("error", (err) => {
   console.error("PostgreSQL connection error:", err);
 });
 
-module.exports = { pgPool };
+module.exports = { pgPool, mongoConnected: getMongoConnected };
