@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
 const mongoose = require("mongoose");
-const { mongoConnected } = require("../config/database");
+const { mongoConnected, waitForConnection } = require("../config/database");
 const router = express.Router();
 
 // Debug middleware to log environment variables
@@ -18,14 +18,23 @@ router.use((req, res, next) => {
 });
 
 // Helper function to check MongoDB connection
-const checkMongoConnection = (req, res, next) => {
-  if (!mongoConnected() && mongoose.connection.readyState !== 1) {
-    console.log("MongoDB not connected, attempting to reconnect...");
+const checkMongoConnection = async (req, res, next) => {
+  try {
+    const isConnected = await waitForConnection();
+    if (!isConnected) {
+      console.log("MongoDB not connected, returning 503...");
+      return res.status(503).json({
+        message: "Database connection not ready. Please try again in a moment.",
+      });
+    }
+    console.log("MongoDB connection confirmed, proceeding...");
+    next();
+  } catch (error) {
+    console.error("Error checking MongoDB connection:", error);
     return res.status(503).json({
-      message: "Database connection not ready. Please try again in a moment.",
+      message: "Database connection error. Please try again.",
     });
   }
-  next();
 };
 
 // Register user

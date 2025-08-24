@@ -46,9 +46,40 @@ const connectMongoDB = async (retries = 3) => {
   }
 };
 
-// Connect to MongoDB with retry
+// Global connection state
 let mongoConnected = false;
-connectMongoDB().then((success) => {
+let connectionPromise = null;
+
+// Initialize MongoDB connection
+const initializeMongoDB = async () => {
+  if (!connectionPromise) {
+    connectionPromise = connectMongoDB();
+  }
+  return connectionPromise;
+};
+
+// Get connection status
+const getMongoConnected = () => {
+  return mongoConnected && mongoose.connection.readyState === 1;
+};
+
+// Wait for connection to be ready
+const waitForConnection = async () => {
+  if (getMongoConnected()) {
+    return true;
+  }
+
+  try {
+    await initializeMongoDB();
+    return getMongoConnected();
+  } catch (error) {
+    console.error("Failed to establish MongoDB connection:", error);
+    return false;
+  }
+};
+
+// Connect to MongoDB and update state
+initializeMongoDB().then((success) => {
   mongoConnected = success;
 });
 
@@ -68,9 +99,6 @@ mongoose.connection.on("connected", () => {
   mongoConnected = true;
 });
 
-// Export connection status for other modules
-const getMongoConnected = () => mongoConnected;
-
 // PostgreSQL Connection
 const pgPool = new Pool({
   connectionString: process.env.POSTGRES_CONN,
@@ -87,4 +115,8 @@ pgPool.on("error", (err) => {
   console.error("PostgreSQL connection error:", err);
 });
 
-module.exports = { pgPool, mongoConnected: getMongoConnected };
+module.exports = {
+  pgPool,
+  mongoConnected: getMongoConnected,
+  waitForConnection,
+};
