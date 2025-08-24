@@ -8,7 +8,7 @@ A full-stack web application for managing pacing targets with user authenticatio
 
 ## ✨ Features
 
-- **User Authentication**: Secure login system with JWT tokens (users managed by administrators)
+- **User Authentication**: Secure login system with JWT tokens
 - **Pacing Target Management**: Create, edit, delete, and toggle status of pacing targets
 - **CSV Bulk Upload**: Upload CSV files with validation against PostgreSQL database
 - **PostgreSQL Integration**: Query tag master data for validation and reference
