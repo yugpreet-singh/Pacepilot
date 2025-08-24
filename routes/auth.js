@@ -37,31 +37,6 @@ const checkMongoConnection = async (req, res, next) => {
   }
 };
 
-// Utility endpoint to hash passwords for manual user creation
-router.post("/hash-password", async (req, res) => {
-  try {
-    const { password } = req.body;
-    
-    if (!password) {
-      return res.status(400).json({ message: "Password is required" });
-    }
-
-    // Use bcrypt to hash the password (same as User model)
-    const bcrypt = require("bcryptjs");
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    res.json({
-      message: "Password hashed successfully",
-      hashedPassword: hashedPassword,
-      note: "Use this hashed password when manually creating users in the database"
-    });
-  } catch (error) {
-    console.error("Password hashing error:", error);
-    res.status(500).json({ message: "Error hashing password" });
-  }
-});
-
 // Login user
 router.post(
   "/login",
