@@ -2,6 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 const router = express.Router();
 
 // Debug middleware to log environment variables
@@ -10,8 +11,20 @@ router.use((req, res, next) => {
   console.log("JWT_SECRET exists:", !!process.env.JWT_SECRET);
   console.log("MONGODB_URI exists:", !!process.env.MONGODB_URI);
   console.log("NODE_ENV:", process.env.NODE_ENV);
+  console.log("MongoDB ready state:", mongoose.connection.readyState);
   next();
 });
+
+// Helper function to check MongoDB connection
+const checkMongoConnection = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    console.log("MongoDB not connected, attempting to reconnect...");
+    return res.status(503).json({
+      message: "Database connection not ready. Please try again in a moment."
+    });
+  }
+  next();
+};
 
 // Register user
 router.post(
@@ -25,6 +38,7 @@ router.post(
       .isLength({ min: 6 })
       .withMessage("Password must have at least 6 characters."),
   ],
+  checkMongoConnection,
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -74,6 +88,7 @@ router.post(
     body("username").notEmpty().withMessage("Username is required"),
     body("password").notEmpty().withMessage("Password is required"),
   ],
+  checkMongoConnection,
   async (req, res) => {
     try {
       const errors = validationResult(req);
