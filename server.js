@@ -2,7 +2,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
-require("dotenv").config({ path: "./config.env" });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +25,16 @@ app.use("/api/tags", require("./routes/tags"));
 
 // Serve the main application
 app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Serve login page
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+// Catch-all route for SPA routing
+app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
