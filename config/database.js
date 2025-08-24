@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 const { Pool } = require("pg");
+const path = require("path");
+
+// Load environment variables from config.env for local development
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config({ path: path.join(__dirname, "../config.env") });
+}
 
 // MongoDB Connection
 mongoose

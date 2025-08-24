@@ -23,25 +23,15 @@ app.use("/api/targets", require("./routes/targets"));
 app.use("/api/upload", require("./routes/upload"));
 app.use("/api/tags", require("./routes/tags"));
 
-// Serve the main application
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// Serve login page
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-// Catch-all route for SPA routing
+// Serve the main application for all routes
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+  // If it's an API route, let it pass through
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ error: "API endpoint not found" });
+  }
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!" });
+  // For all other routes, serve the main app
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.listen(PORT, () => {
