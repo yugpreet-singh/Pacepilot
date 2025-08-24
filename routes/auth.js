@@ -4,6 +4,15 @@ const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
 const router = express.Router();
 
+// Debug middleware to log environment variables
+router.use((req, res, next) => {
+  console.log("Auth route - Environment check:");
+  console.log("JWT_SECRET exists:", !!process.env.JWT_SECRET);
+  console.log("MONGODB_URI exists:", !!process.env.MONGODB_URI);
+  console.log("NODE_ENV:", process.env.NODE_ENV);
+  next();
+});
+
 // Register user
 router.post(
   "/register",
