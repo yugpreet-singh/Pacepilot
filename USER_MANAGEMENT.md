@@ -1,20 +1,20 @@
-# User Management Guide (Demo Setup)
+# User Management Guide
 
 ## Overview
 
-This is a **DEMO VERSION** with simplified password handling. Users can be added directly to the database with plain text passwords.
+This is a **development** setup with simplified password handling. Users can be added directly to the database with plain text passwords.
 
-## ⚠️ **Demo Security Notice**
+## ⚠️ **Security Notice**
 
-- **This setup is for DEMONSTRATION purposes only**
+- **This setup is for development purposes only**
 - **Passwords are stored as plain text** (NOT recommended for production)
-- **Use only in controlled, demo environments**
+- **Use only in controlled, development environments**
 
 ## 🛠️ **How to Add Users**
 
-### **Direct Database Insertion (Simplified for Demo)**
+### **Direct Database Insertion (Simplified for Development)**
 
-1. **Connect to MongoDB Atlas** using MongoDB Compass or similar tool
+1. **Connect to MongoDB** using MongoDB Compass or similar tool
 2. **Navigate to your database** (pacing_tracker)
 3. **Go to the `users` collection**
 4. **Insert a new document** with this structure:
@@ -32,7 +32,7 @@ This is a **DEMO VERSION** with simplified password handling. Users can be added
 
 - **username**: String (min 3 characters, must be unique)
 - **email**: String (must be unique, will be converted to lowercase)
-- **password**: String (min 6 characters, stored as plain text for demo)
+- **password**: String (min 6 characters, stored as plain text for development)
 - **createdAt**: Date (optional, defaults to current time)
 
 ## 📊 **Database Schema**
@@ -49,7 +49,7 @@ Users are stored with this structure:
 }
 ```
 
-## 🧪 **Demo User Examples**
+## 🧪 **User Examples**
 
 ### **Example 1: Admin User**
 
@@ -81,50 +81,44 @@ Users are stored with this structure:
 }
 ```
 
-## 🔍 **Testing the Demo**
+## 🔍 **Testing**
 
 1. **Add users** directly to MongoDB using the examples above
 2. **Test login** with the credentials you added
 3. **Verify functionality** works as expected
 
-## 🚨 **Important Demo Notes**
+## 🚨 **Important Notes**
 
 1. **Plain Text Passwords**: Passwords are stored and compared as plain text
-2. **No Encryption**: bcrypt has been removed for demo simplicity
+2. **No Encryption**: bcrypt has been removed for development simplicity
 3. **Direct Database Access**: Users must be added directly to MongoDB
-4. **Demo Only**: This setup is NOT suitable for production use
+4. **Development Only**: This setup is NOT suitable for production use
 
 ## 📝 **Quick Test Commands**
 
 ### **Test Login API:**
 
 ```bash
-curl -X POST https://your-app.vercel.app/api/auth/login \
+curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "demo", "password": "demo123"}'
 ```
 
-### **Test Health Check:**
+## 🎯 **Workflow**
 
-```bash
-curl https://your-app.vercel.app/api/auth/health
-```
-
-## 🎯 **Demo Workflow**
-
-1. **Add users** directly to MongoDB Atlas
+1. **Add users** directly to MongoDB
 2. **Test login** with the added credentials
 3. **Verify all features** work correctly
-4. **Show the demo** to stakeholders
+4. **Test the application** functionality
 
-## 📞 **Demo Support**
+## 📞 **Support**
 
 If you encounter issues:
 
-1. Check Vercel function logs
-2. Verify MongoDB Atlas connection
+1. Check server logs
+2. Verify MongoDB connection
 3. Ensure users exist in the database
-4. Test with the health check endpoint: `/api/auth/health`
+4. Test with the login endpoint: `/api/auth/login`
 
 ## 🔄 **Converting to Production**
 
@@ -137,4 +131,4 @@ When ready to go live:
 
 ---
 
-**Remember: This is a DEMO setup only! Never use plain text passwords in production!**
+**Remember: This is a development setup only! Never use plain text passwords in production!**

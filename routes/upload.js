@@ -173,62 +173,83 @@ router.post("/validate", auth, upload.single("file"), async (req, res) => {
                 continue;
               }
 
-              // Special validation for Account type
-              if (row.tag_header === "Account") {
-                // Check uniqueness in CSV being uploaded
-                const csvAccountCount = results.filter(
-                  (r, idx) =>
-                    idx !== i &&
-                    r.client_subgroup_id === row.client_subgroup_id &&
-                    r.channel_id === row.channel_id &&
-                    r.tag_header === "Account"
-                ).length;
+              // Check uniqueness for all tag types (not just Account)
+              // Check uniqueness in CSV being uploaded
+              const csvDuplicateCount = results.filter(
+                (r, idx) =>
+                  idx !== i &&
+                  r.client_subgroup_id === row.client_subgroup_id &&
+                  r.channel_id === row.channel_id &&
+                  r.tag_header === row.tag_header &&
+                  r.tag_id === row.tag_id &&
+                  r.month === row.month &&
+                  r.year === row.year
+              ).length;
 
-                if (csvAccountCount > 0) {
+              if (csvDuplicateCount > 0) {
+                errors.push({
+                  row: rowNumber,
+                  error: `Duplicate ${row.tag_header} in CSV`,
+                  details: `${row.tag_header} entry already exists for client_subgroup_id=${row.client_subgroup_id}, channel_id=${row.channel_id}, tag_id=${row.tag_id}, month=${row.month}, and year=${row.year} in this upload`,
+                  data: row,
+                });
+                continue;
+              }
+
+              // Check uniqueness in MongoDB existing entries for all tag types
+              try {
+                // Create month string in YYYY-MM format for duplicate checking
+                const monthNum = parseInt(row.month.trim());
+                const year = row.year.toString().trim();
+
+                if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
                   errors.push({
                     row: rowNumber,
-                    error: "Duplicate Account in CSV",
-                    details: `Account entry already exists for client_subgroup_id=${row.client_subgroup_id} and channel_id=${row.channel_id} in this upload`,
+                    error: "Invalid month format",
+                    details: "Month must be a number between 1-12",
                     data: row,
                   });
                   continue;
                 }
 
-                // Check uniqueness in MongoDB existing entries
-                try {
-                  const existingAccountResult = await PacingTarget.aggregate([
-                    {
-                      $match: {
-                        clientSubgroupId: clientSubgroupId,
-                        channel: channelId,
-                        tagType: "Account",
-                      },
-                    },
-                    {
-                      $count: "count",
-                    },
-                  ]);
+                const monthString = `${year}-${monthNum
+                  .toString()
+                  .padStart(2, "0")}`;
 
-                  const existingCount =
-                    existingAccountResult.length > 0
-                      ? existingAccountResult[0].count
-                      : 0;
+                const existingTargetResult = await PacingTarget.aggregate([
+                  {
+                    $match: {
+                      clientSubgroupId: clientSubgroupId,
+                      channel: channelId,
+                      tagType: row.tag_header,
+                      tagId: tagId,
+                      month: monthString,
+                    },
+                  },
+                  {
+                    $count: "count",
+                  },
+                ]);
 
-                  if (existingCount > 0) {
-                    errors.push({
-                      row: rowNumber,
-                      error: "Account already exists",
-                      details: `Account entry already exists in database for client_subgroup_id=${clientSubgroupId} and channel_id=${channelId}`,
-                      data: row,
-                    });
-                    continue;
-                  }
-                } catch (accountError) {
-                  // Skip uniqueness check on error
+                const existingCount =
+                  existingTargetResult.length > 0
+                    ? existingTargetResult[0].count
+                    : 0;
+
+                if (existingCount > 0) {
+                  errors.push({
+                    row: rowNumber,
+                    error: `${row.tag_header} already exists`,
+                    details: `${row.tag_header} entry already exists in database for client_subgroup_id=${clientSubgroupId}, channel_id=${channelId}, tag_id=${tagId}, and month=${monthString}`,
+                    data: row,
+                  });
+                  continue;
                 }
+              } catch (duplicateCheckError) {
+                // Skip uniqueness check on error
               }
 
-              // Cross-validate with PostgreSQL database (skip for Account type)
+              // Special validation for Account type
               if (row.tag_header === "Account") {
                 // Validate tag_name matches for Account
                 if (row.tag_name.trim() !== "Account") {
@@ -530,76 +551,82 @@ router.post("/csv", auth, upload.single("file"), async (req, res) => {
                 continue;
               }
 
-              // Special validation for Account type
-              if (row.tag_header === "Account") {
-                // Check uniqueness in CSV being uploaded
-                const csvAccountCount = results.filter(
-                  (r, idx) =>
-                    idx !== i &&
-                    r.client_subgroup_id === row.client_subgroup_id &&
-                    r.channel_id === row.channel_id &&
-                    r.tag_header === "Account"
-                ).length;
+              // Check uniqueness for all tag types (not just Account)
+              // Check uniqueness in CSV being uploaded
+              const csvDuplicateCount = results.filter(
+                (r, idx) =>
+                  idx !== i &&
+                  r.client_subgroup_id === row.client_subgroup_id &&
+                  r.channel_id === row.channel_id &&
+                  r.tag_header === row.tag_header &&
+                  r.tag_id === row.tag_id
+              ).length;
 
-                if (csvAccountCount > 0) {
+              if (csvDuplicateCount > 0) {
+                errors.push({
+                  row: rowNumber,
+                  error: `Duplicate ${row.tag_header} in CSV`,
+                  details: `${row.tag_header} entry already exists for client_subgroup_id=${row.client_subgroup_id}, channel_id=${row.channel_id}, and tag_id=${row.tag_id} in this upload`,
+                  data: row,
+                });
+                continue;
+              }
+
+              // Check uniqueness in MongoDB existing entries for all tag types
+              try {
+                // Create month string in YYYY-MM format for duplicate checking
+                const monthNum = parseInt(row.month.trim());
+                const year = row.year.toString().trim();
+
+                if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
                   errors.push({
                     row: rowNumber,
-                    error: "Duplicate Account in CSV",
-                    details: `Account entry already exists for client_subgroup_id=${row.client_subgroup_id} and channel_id=${row.channel_id} in this upload`,
+                    error: "Invalid month format",
+                    details: "Month must be a number between 1-12",
                     data: row,
                   });
                   continue;
                 }
 
-                // Check uniqueness in MongoDB existing entries
-                try {
-                  const existingAccountQuery = `
-                     SELECT COUNT(*) as count
-                     FROM pacing_targets 
-                     WHERE client_subgroup_id = $1 AND channel = $2 AND tag_type = 'Account'
-                   `;
+                const monthString = `${year}-${monthNum
+                  .toString()
+                  .padStart(2, "0")}`;
 
-                  const existingAccountResult = await PacingTarget.aggregate([
-                    {
-                      $match: {
-                        clientSubgroupId: clientSubgroupId,
-                        channel: channelId,
-                        tagType: "Account",
-                      },
+                const existingTargetResult = await PacingTarget.aggregate([
+                  {
+                    $match: {
+                      clientSubgroupId: clientSubgroupId,
+                      channel: channelId,
+                      tagType: row.tag_header,
+                      tagId: tagId,
+                      month: monthString,
                     },
-                    {
-                      $count: "count",
-                    },
-                  ]);
+                  },
+                  {
+                    $count: "count",
+                  },
+                ]);
 
-                  const existingCount =
-                    existingAccountResult.length > 0
-                      ? existingAccountResult[0].count
-                      : 0;
+                const existingCount =
+                  existingTargetResult.length > 0
+                    ? existingTargetResult[0].count
+                    : 0;
 
-                  if (existingCount > 0) {
-                    errors.push({
-                      row: rowNumber,
-                      error: "Account already exists",
-                      details: `Account entry already exists in database for client_subgroup_id=${clientSubgroupId} and channel_id=${channelId}`,
-                      data: row,
-                    });
-                    continue;
-                  }
-                } catch (accountError) {
-                  // Skip uniqueness check on error
+                if (existingCount > 0) {
+                  errors.push({
+                    row: rowNumber,
+                    error: `${row.tag_header} already exists`,
+                    details: `${row.tag_header} entry already exists in database for client_subgroup_id=${clientSubgroupId}, channel_id=${channelId}, tag_id=${tagId}, and month=${monthString}`,
+                    data: row,
+                  });
+                  continue;
                 }
+              } catch (duplicateCheckError) {
+                // Skip uniqueness check on error
               }
 
-              // Cross-validate with PostgreSQL database (skip for Account type)
+              // Special validation for Account type
               if (row.tag_header === "Account") {
-                // For Account type, we need to set some default values
-                const accountTagData = {
-                  tag_name: "Account",
-                  tag_type_id: 0, // Special ID for Account
-                  tag_header: "Account",
-                };
-
                 // Validate tag_name matches for Account
                 if (row.tag_name.trim() !== "Account") {
                   errors.push({
@@ -665,20 +692,10 @@ router.post("/csv", auth, upload.single("file"), async (req, res) => {
                 }
               }
 
-              // Create month string in YYYY-MM format
+              // Month validation already done during duplicate checking above
+              // Create month string in YYYY-MM format for client name fetching
               const monthNum = parseInt(row.month.trim());
               const year = row.year.toString().trim();
-
-              if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
-                errors.push({
-                  row: rowNumber,
-                  error: "Invalid month format",
-                  details: "Month must be a number between 1-12",
-                  data: row,
-                });
-                continue;
-              }
-
               const monthString = `${year}-${monthNum
                 .toString()
                 .padStart(2, "0")}`;

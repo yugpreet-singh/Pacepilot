@@ -723,7 +723,7 @@ class PacingTrackerApp {
             <td class="px-6 py-4 text-center">${target.clientSubgroupId}</td>
             <td class="px-6 py-4">${target.tagName}</td>
             <td class="px-6 py-4 text-center">${target.channel}</td>
-            <td class="px-6 py-4">
+            <td class="px-6 py-4 whitespace-nowrap">
                 <span class="bg-${
                   target.tagType === "Category"
                     ? "blue"
@@ -907,28 +907,34 @@ class PacingTrackerApp {
   }
 
   openBulkUploadModal() {
-    const uploadModal = document.getElementById("bulk-upload-modal");
-    uploadModal.classList.remove("modal-hidden");
+    document
+      .getElementById("bulk-upload-modal")
+      .classList.remove("modal-hidden");
 
-    // Reset all UI elements using the resetFileInput method
-    this.resetFileInput();
-    document.getElementById("import-data-btn").disabled = true;
-
-    // Ensure validation step is visible by default
+    // Reset UI state
     document.getElementById("validation-step").classList.remove("hidden");
+    document.getElementById("validation-results").classList.add("hidden");
+    document.getElementById("validation-progress").classList.add("hidden");
 
-    // Add click outside to close functionality
-    const handleClickOutside = (event) => {
-      if (event.target === uploadModal) {
-        this.closeBulkUploadModal();
-        uploadModal.removeEventListener("click", handleClickOutside);
-      }
-    };
+    // Reset import button state
+    const importBtn = document.getElementById("import-data-btn");
+    importBtn.disabled = true;
+    importBtn.textContent = "Import Data";
 
-    uploadModal.addEventListener("click", handleClickOutside);
+    // Clear previous content
+    document.getElementById("validation-content").innerHTML = "";
+    document.getElementById("file-info-section").innerHTML = "";
 
-    // Store the handler for cleanup
-    this.uploadModalClickHandler = handleClickOutside;
+    // Reset file input
+    const fileInput = document.getElementById("file-upload");
+    fileInput.value = "";
+    this.uploadedFile = null;
+
+    // Disable validate button
+    const validateBtn = document.getElementById("validate-file-btn");
+    if (validateBtn) {
+      validateBtn.disabled = true;
+    }
   }
 
   closeBulkUploadModal() {
@@ -1225,68 +1231,69 @@ class PacingTrackerApp {
   }
 
   handleFileUploadClick() {
-    // Clear the file input value to allow re-uploading the same file
     const fileInput = document.getElementById("file-upload");
     fileInput.value = "";
-
-    // Reset the uploaded file
     this.uploadedFile = null;
-
-    // Reset UI state to show validation step and hide validation results
     document.getElementById("validation-results").classList.add("hidden");
     document.getElementById("validation-step").classList.remove("hidden");
-    document.getElementById("import-data-btn").disabled = true;
 
-    // Clear previous content
+    // Reset import button state
+    const importBtn = document.getElementById("import-data-btn");
+    importBtn.disabled = true;
+    importBtn.textContent = "Import Data";
+
     document.getElementById("validation-content").innerHTML = "";
     document.getElementById("file-info-section").innerHTML = "";
-
-    // Disable validate button when no file is selected
     const validateBtn = document.getElementById("validate-file-btn");
     if (validateBtn) {
       validateBtn.disabled = true;
     }
   }
 
-  handleFileUpload(e) {
-    const file = e.target.files[0];
+  handleFileUpload(event) {
+    const file = event.target.files[0];
     if (!file) return;
 
-    // Store file for later processing
     this.uploadedFile = file;
 
-    // Always reset UI state when a new file is uploaded (even if it's the same file)
-    // Hide validation results and show validation step
-    document.getElementById("validation-results").classList.add("hidden");
+    // Always show validation step, hide results, clear content, and disable import button
     document.getElementById("validation-step").classList.remove("hidden");
-    document.getElementById("import-data-btn").disabled = true;
-
-    // Clear previous validation content and file info
+    document.getElementById("validation-results").classList.add("hidden");
     document.getElementById("validation-content").innerHTML = "";
     document.getElementById("file-info-section").innerHTML = "";
 
-    // Show file info in validation step
-    document.getElementById("validation-content").innerHTML = `
-            <p class="text-sm"><span class="font-bold text-blue-600">File selected:</span> ${
-              file.name
-            }</p>
-            <p class="text-sm"><span class="font-bold text-blue-600">Size:</span> ${this.formatFileSize(
-              file.size
-            )}</p>
-            <p class="text-sm text-slate-600">Click "Validate File" to check your data before importing.</p>
-        `;
+    // Reset import button state
+    const importBtn = document.getElementById("import-data-btn");
+    importBtn.disabled = true;
+    importBtn.textContent = "Import Data";
 
-    // Also populate the file info section for later preservation
+    // Show file info
     document.getElementById("file-info-section").innerHTML = `
-            <p class="text-sm"><span class="font-bold text-blue-600">File selected:</span> ${
-              file.name
-            }</p>
-            <p class="text-sm"><span class="font-bold text-blue-600">Size:</span> ${this.formatFileSize(
-              file.size
-            )}</p>
-        `;
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <svg class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <p class="text-sm font-medium text-blue-900">${file.name}</p>
+            <p class="text-sm text-blue-500">${(file.size / 1024).toFixed(
+              1
+            )} KB</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onclick="this.parentElement.remove()"
+          class="text-blue-400 hover:text-blue-600"
+        >
+          <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    `;
 
-    // Enable validate button when file is uploaded
+    // Enable validate button
     const validateBtn = document.getElementById("validate-file-btn");
     if (validateBtn) {
       validateBtn.disabled = false;
@@ -1319,6 +1326,10 @@ class PacingTrackerApp {
     // Show progress UI
     document.getElementById("validation-progress").classList.remove("hidden");
     document.getElementById("validation-step").classList.add("hidden");
+
+    // Set progress title for validation
+    document.querySelector("#validation-progress h4").textContent =
+      "Validating CSV File...";
 
     // Simulate progress updates
     let progress = 0;
@@ -1387,6 +1398,8 @@ class PacingTrackerApp {
                     <p>Total rows: ${result.totalRows}</p>
                     <p>Valid rows: ${result.validRows}</p>
                     <p>Empty rows: ${result.emptyRows}</p>
+                    <p class="text-xs text-green-600 mt-1">✓ No duplicates found in CSV file</p>
+                    <p class="text-xs text-green-600">✓ No conflicts with existing database entries</p>
                   </div>
                 </div>
               </div>
@@ -1401,7 +1414,7 @@ class PacingTrackerApp {
             <div class="bg-red-50 border border-red-200 rounded-lg p-4">
               <div class="flex">
                 <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                 </svg>
                 <div class="ml-3">
                   <p class="text-sm font-medium text-red-800">${result.message}</p>
@@ -1410,6 +1423,7 @@ class PacingTrackerApp {
                     <p>Valid rows: ${result.validRows}</p>
                     <p>Error rows: ${result.errorRows}</p>
                     <p>Empty rows: ${result.emptyRows}</p>
+                    <p class="text-xs text-red-600 mt-1">⚠ Please fix the errors below before importing</p>
                   </div>
                 </div>
               </div>
@@ -1452,7 +1466,7 @@ class PacingTrackerApp {
           <div class="bg-red-50 border border-red-200 rounded-lg p-4">
             <div class="flex">
               <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
               </svg>
               <div class="ml-3">
                 <p class="text-sm font-medium text-red-800">${result.message}</p>
@@ -1516,6 +1530,42 @@ class PacingTrackerApp {
   async importData() {
     if (!this.uploadedFile) return;
 
+    // Disable import button to prevent duplicate requests
+    const importBtn = document.getElementById("import-data-btn");
+    importBtn.disabled = true;
+    importBtn.textContent = "Importing...";
+
+    // Show progress UI
+    document.getElementById("validation-progress").classList.remove("hidden");
+    document.getElementById("validation-results").classList.add("hidden");
+
+    // Set progress title for import
+    document.querySelector("#validation-progress h4").textContent =
+      "Importing CSV File...";
+
+    // Simulate progress updates
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+      progress += Math.random() * 20;
+      if (progress > 90) progress = 90;
+
+      document.getElementById("progress-bar").style.width = `${progress}%`;
+      document.getElementById(
+        "progress-percentage"
+      ).textContent = `${Math.round(progress)}%`;
+
+      if (progress < 30) {
+        document.getElementById("progress-text").textContent =
+          "Preparing data for import...";
+      } else if (progress < 60) {
+        document.getElementById("progress-text").textContent =
+          "Importing data to database...";
+      } else if (progress < 90) {
+        document.getElementById("progress-text").textContent =
+          "Finalizing import...";
+      }
+    }, 300);
+
     const formData = new FormData();
     formData.append("file", this.uploadedFile);
 
@@ -1528,21 +1578,63 @@ class PacingTrackerApp {
         body: formData,
       });
 
+      clearInterval(progressInterval);
+
+      // Complete progress
+      document.getElementById("progress-bar").style.width = "100%";
+      document.getElementById("progress-percentage").textContent = "100%";
+      document.getElementById("progress-text").textContent = "Import complete!";
+
       const result = await response.json();
+
+      // Hide progress UI
+      setTimeout(() => {
+        document.getElementById("validation-progress").classList.add("hidden");
+      }, 500);
+
+      // Always show validation results regardless of success/failure
+      document.getElementById("validation-results").classList.remove("hidden");
 
       if (response.ok) {
         document.getElementById("validation-content").innerHTML = `
-                     <p class="text-sm"><span class="font-bold text-green-600">${result.validRows} valid rows</span> processed successfully.</p>
-                     <p class="text-sm text-green-600">Data imported successfully!</p>
-                 `;
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex">
+              <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-green-800">Import completed successfully!</p>
+                <div class="mt-2 text-sm text-green-700">
+                  <p>Total rows: ${result.totalRows || "N/A"}</p>
+                  <p>Valid rows: ${result.validRows || "N/A"}</p>
+                  <p>Imported rows: ${
+                    result.importedRows || result.validRows || "N/A"
+                  }</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
 
         // Reload targets
         await this.loadTargets();
 
-        // Disable import button
-        document.getElementById("import-data-btn").disabled = true;
+        // Keep import button disabled after successful import
+        importBtn.disabled = true;
+        importBtn.textContent = "Import Data";
       } else {
-        let errorHtml = `<p class="text-sm text-red-600 font-bold">Error: ${result.message}</p>`;
+        let errorHtml = `
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+              <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-red-800">Import failed: ${result.message}</p>
+              </div>
+            </div>
+          </div>
+        `;
 
         // Display detailed validation errors if available
         if (result.errors && result.errors.length > 0) {
@@ -1567,17 +1659,35 @@ class PacingTrackerApp {
 
         // Reset file input on validation errors so user can try a different file
         this.resetFileInput();
-        document.getElementById("import-data-btn").disabled = true;
+        importBtn.disabled = true;
+        importBtn.textContent = "Import Data";
       }
     } catch (error) {
       console.error("Error importing data:", error);
+
+      clearInterval(progressInterval);
+
+      // Hide progress UI
+      document.getElementById("validation-progress").classList.add("hidden");
+      document.getElementById("validation-results").classList.remove("hidden");
+
       document.getElementById("validation-content").innerHTML = `
-                <p class="text-sm text-red-600">Network error. Please try again.</p>
-            `;
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex">
+            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-red-800">Network error. Please try again.</p>
+            </div>
+          </div>
+        </div>
+      `;
 
       // Reset file input and uploaded file on network error
       this.resetFileInput();
-      document.getElementById("import-data-btn").disabled = true;
+      importBtn.disabled = true;
+      importBtn.textContent = "Import Data";
     }
   }
 
@@ -1595,6 +1705,11 @@ class PacingTrackerApp {
     // Clear file info and validation content
     document.getElementById("file-info-section").innerHTML = "";
     document.getElementById("validation-content").innerHTML = "";
+
+    // Reset import button state
+    const importBtn = document.getElementById("import-data-btn");
+    importBtn.disabled = true;
+    importBtn.textContent = "Import Data";
 
     // Disable validate button when no file is selected
     const validateBtn = document.getElementById("validate-file-btn");

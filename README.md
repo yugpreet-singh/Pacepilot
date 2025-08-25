@@ -1,10 +1,10 @@
 # PacePilot - Pacing Target Management System
 
-A full-stack web application for managing pacing targets with user authentication, CSV bulk upload, and PostgreSQL integration for data validation.
+An enterprise-grade web application for managing pacing targets with advanced user authentication, CSV bulk upload capabilities, and real-time PostgreSQL integration for comprehensive data validation.
 
-## 🚀 Live Demo
+## 🚀 Getting Started
 
-[Deploy your own instance on Vercel](#deployment)
+Get up and running with PacePilot in minutes. Perfect for enterprise environments and production deployments.
 
 ## ✨ Features
 
@@ -71,7 +71,10 @@ cp env.example config.env
 Update `config.env` with your database credentials:
 
 ```env
-# MongoDB Connection
+# Environment
+NODE_ENV=development
+
+# MongoDB Connection (local or cloud)
 MONGODB_URI=mongodb://localhost:27017/pacing_tracker
 
 # PostgreSQL Connection
@@ -86,9 +89,9 @@ PORT=3000
 
 ### 4. Set up databases
 
-- Ensure MongoDB is running and accessible
-- Ensure PostgreSQL is running with the required database
-- The application expects a `tag_master` table structure
+- **MongoDB**: Install and start MongoDB or configure cloud instance
+- **PostgreSQL**: Configure connection to your PostgreSQL database
+- The application expects a `tag_master` table structure in PostgreSQL
 
 ### 5. Start the application
 
@@ -100,18 +103,35 @@ npm run dev
 npm start
 ```
 
-## 🌐 Deployment
+## 🚀 Development & Production
 
-### Deploy to Vercel (Recommended)
+### Environment Setup
 
-1. **Fork/Clone this repository**
-2. **Connect to Vercel**: [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_USERNAME/pacing-tracker)
-3. **Configure environment variables** in Vercel dashboard
-4. **Deploy!**
+The application supports both development and production environments through environment variables:
 
-### Manual Deployment
+- **Development**: Uses local databases and default settings
+- **Production**: Configure cloud databases and production settings
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+### Local Development
+
+1. **Clone this repository**
+2. **Install dependencies**: `npm install`
+3. **Configure environment variables** in `config.env\*\*
+4. **Start MongoDB** or configure cloud instance
+5. **Run the application**: `npm run dev`
+
+### Production Deployment
+
+1. **Set production environment variables**
+2. **Configure production databases (MongoDB Atlas, AWS RDS, etc.)**
+3. **Deploy to your preferred hosting platform (Vercel, AWS, Heroku, etc.)**
+4. **Run**: `npm start`
+
+### Prerequisites
+
+- MongoDB (local or cloud)
+- PostgreSQL access
+- Node.js v18 or higher
 
 ## 📁 Project Structure
 
@@ -126,7 +146,6 @@ pacing-tracker/
 ├── routes/          # API endpoints
 ├── uploads/         # File upload directory
 ├── server.js        # Main server file
-├── vercel.json      # Vercel configuration
 └── package.json     # Dependencies
 ```
 
@@ -167,7 +186,6 @@ pacing-tracker/
 ## 🔒 Security Features
 
 - JWT-based authentication
-- Password hashing with bcrypt
 - CORS protection
 - Input validation and sanitization
 - File upload security
@@ -191,20 +209,53 @@ pacing-tracker/
 
 This project is licensed under the ISC License.
 
+## 🚀 Deployment
+
+### Quick Deploy Options
+
+- **Vercel**: Connect your GitHub repo and deploy instantly
+- **Heroku**: Use the Heroku CLI for easy deployment
+- **AWS**: Deploy to EC2 or use Elastic Beanstalk
+- **DigitalOcean**: Use App Platform for simple deployment
+
+### Environment Variables for Production
+
+Set these in your hosting platform:
+
+- `NODE_ENV`: Set to `production` (enables production optimizations)
+- `MONGODB_URI`: Your production MongoDB connection string
+- `POSTGRES_CONN`: Your production PostgreSQL connection string
+- `JWT_SECRET`: Strong secret key for production
+- `PORT`: Server port (usually set automatically by hosting platform)
+
+### Environment-Specific Features
+
+- **Development Mode** (`NODE_ENV=development`):
+
+  - Loads configuration from `config.env` file
+  - Verbose logging and debugging
+  - Development-optimized database connections
+
+- **Production Mode** (`NODE_ENV=production`):
+  - Uses environment variables directly
+  - Production-optimized database pools
+  - Security headers enabled
+  - Minimal logging
+
 ## 🆘 Support
 
 If you encounter any issues:
 
-1. Check the [troubleshooting section](./DEPLOYMENT.md#-troubleshooting)
-2. Review the [deployment guide](./DEPLOYMENT.md)
+1. Check server logs and database connections
+2. Verify environment variables are set correctly
 3. Open an issue on GitHub
 
 ## 🙏 Acknowledgments
 
-- Built with modern web technologies
-- Inspired by real-world business requirements
-- Designed for scalability and maintainability
+- Built with enterprise-grade web technologies
+- Designed for real-world business requirements
+- Engineered for scalability, maintainability, and production use
 
 ---
 
-**Made with ❤️ for efficient pacing target management**
+**Built for enterprise-grade pacing target management**

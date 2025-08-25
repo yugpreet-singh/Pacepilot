@@ -23,15 +23,13 @@ app.use("/api/targets", require("./routes/targets"));
 app.use("/api/upload", require("./routes/upload"));
 app.use("/api/tags", require("./routes/tags"));
 
-// Serve the main application for all routes
-app.get("*", (req, res) => {
-  // If it's an API route, let it pass through
-  if (req.path.startsWith("/api/")) {
-    return res.status(404).json({ error: "API endpoint not found" });
-  }
-
-  // For all other routes, serve the main app
+// Serve the main application
+app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
 app.listen(PORT, () => {
